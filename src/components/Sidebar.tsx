@@ -206,8 +206,8 @@ export default function Sidebar({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-[70] w-full sm:w-80 transform border-r border-white/[0.06] bg-slate-950 transition-transform duration-500 ease-in-out lg:translate-x-0 lg:top-16 ${
-          isMobileOpen ? 'translate-x-0 shadow-2xl shadow-black' : '-translate-x-full'
+        className={`fixed top-0 bottom-0 left-0 z-[70] w-full sm:w-80 glass border-r transition-transform duration-500 ease-in-out lg:translate-x-0 lg:top-14 ${
+          isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         } transform-gpu`}
       >
         <div className="flex h-full flex-col p-6 sm:p-6 space-y-8 overflow-y-auto scrollbar-hide pt-20 lg:pt-6">

@@ -67,3 +67,6 @@ build/
 *.db-journal
 dev.db
 dev.db-journal
+
+# EPG repository
+epg/

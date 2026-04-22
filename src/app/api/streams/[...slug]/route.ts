@@ -36,6 +36,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
             headers: {
               'User-Agent': req.headers.get('User-Agent') || 'IPTVCloud-Proxy/1.0',
               Range: req.headers.get('Range') || '',
+              Referer: urlObj.origin,
+              Origin: urlObj.origin,
             },
             redirect: 'follow',
           });
@@ -68,6 +70,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         headers: {
           'User-Agent': req.headers.get('User-Agent') || 'IPTVCloud-Proxy/1.0',
           Range: req.headers.get('Range') || '',
+          Referer: urlObj.origin,
+          Origin: urlObj.origin,
         },
         redirect: 'follow',
       });

@@ -172,8 +172,8 @@ export default function CommentSection({ channelId, ownerId }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900/50 backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden">
-      <div className="p-4 border-b border-white/[0.05] bg-white/[0.02]">
+    <div className="flex flex-col h-full glass rounded-3xl overflow-hidden shadow-2xl">
+      <div className="p-4 border-b border-white/[0.05] glass-light">
         <h3 className="font-bold text-white flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           Live Chat

@@ -26,7 +26,7 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavoritesStore();
   const { addHistory } = useHistoryStore();
-  const { setLastChannelId } = usePlayerStore();
+  const { setLastChannelId, theaterMode } = usePlayerStore();
 
   useEffect(() => {
     if (channel) {
@@ -61,9 +61,9 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-4 sm:px-6 bg-slate-950">
-      <div className="mx-auto max-w-[1460px] space-y-6 sm:space-y-8 animate-fade-in transform-gpu">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+      <div className="mx-auto max-w-[1700px] space-y-6 sm:space-y-8 animate-fade-in transform-gpu">
+        <div className={`grid gap-8 ${theaterMode ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
+          <div className={`${theaterMode ? 'col-span-full' : 'lg:col-span-2'} space-y-4 sm:space-y-6`}>
             <Player
               channel={channel}
               autoPlay
@@ -71,8 +71,8 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
               onPreviousChannel={prevChannel}
             />
 
-            <div className="space-y-4 sm:space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-5 sm:p-6 rounded-[28px] sm:rounded-[32px] bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl shadow-xl">
+            <div className={`space-y-4 sm:space-y-6 ${theaterMode ? 'max-w-4xl mx-auto lg:mx-0' : ''}`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-5 sm:p-6 rounded-[28px] sm:rounded-[32px] glass shadow-xl">
                 <div className="flex items-center gap-4">
                   {channel.logo ? (
                     <Image
@@ -102,7 +102,7 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
                           <div className="h-2.5 w-3.5 sm:h-3 sm:w-4 rounded-sm overflow-hidden border border-white/10 shrink-0">
                             <Image
                               src={getProxiedImageUrl(
-                                `https://flagcdn.com/w80/${allChannels.find((c) => c.country === channel.country)?.id ? REVERSE_COUNTRY_MAP[channel.country.toUpperCase()] : 'un'}.png`,
+                                `https://flagcdn.com/w80/${REVERSE_COUNTRY_MAP[channel.country.toUpperCase()] || 'un'}.png`,
                               )}
                               alt={channel.country}
                               width={20}
@@ -115,7 +115,7 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
                   </div>
                 </div>
 
-                <div className="flex gap-3 sm:gap-4 w-full sm:w-auto">
+                <div className="flex gap-3 sm:gap-4 w-full sm:w-auto shrink-0">
                   <button
                     onClick={() => {
                       if (navigator.share) {
@@ -128,18 +128,16 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
                         alert('Link copied to clipboard!');
                       }
                     }}
-                    className="flex-1 sm:flex-none h-11 sm:h-12 rounded-xl sm:rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-95 shadow-xl"
+                    className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl glass-light flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-95 shadow-xl shrink-0"
+                    title="Share Signal"
                   >
                     <span className="material-icons text-xl">share</span>
-                    <span className="sm:hidden ml-2 text-[10px] font-black uppercase tracking-widest">
-                      Share Signal
-                    </span>
                   </button>
                   <button
                     onClick={() => toggleFavorite(channel.id)}
-                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl sm:rounded-full px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-black transition-all shadow-xl active:scale-95 uppercase tracking-widest ${
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl px-6 sm:px-10 py-3 sm:py-3.5 text-xs sm:text-sm font-black transition-all shadow-xl active:scale-95 uppercase tracking-widest ${
                       isFavorite(channel.id)
-                        ? 'bg-amber-400/20 text-amber-400 hover:bg-amber-400/30 border border-amber-400/30 shadow-amber-900/20'
+                        ? 'bg-amber-400 text-slate-950 hover:bg-amber-500 shadow-amber-900/20'
                         : 'bg-white text-slate-950 hover:bg-slate-200 border border-white'
                     }`}
                   >
@@ -152,7 +150,7 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
               </div>
 
               {channel.description && (
-                <div className="p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-lg">
+                <div className="p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] glass shadow-lg">
                   <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 px-1">
                     Channel Signal Profile
                   </div>
@@ -175,7 +173,7 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
                 </div>
               )}
 
-              <div className="p-5 sm:p-6 rounded-[28px] sm:rounded-[32px] bg-white/[0.02] border border-white/[0.05] shadow-lg">
+              <div className="p-5 sm:p-6 rounded-[28px] sm:rounded-[32px] glass shadow-lg">
                 <div className="flex items-center justify-between mb-4 px-1">
                   <div className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500">
                     Live Program Guide
@@ -196,18 +194,11 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
             </div>
           </div>
 
-          {/* Right Column: Recommendations similar to YouTube */}
-          <div className="lg:col-span-1 flex flex-col gap-8">
-            {relatedChannels.length > 0 && (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 px-2">
-                  <span className="material-icons text-cyan-400 text-sm">category</span>
-                  <h3 className="text-xs font-black text-white uppercase tracking-widest">
-                    Related to {channel.category}
-                  </h3>
-                </div>
+          {/* Sidebar / Recommendations */}
+          <div className={`${theaterMode ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'flex flex-col gap-6'}`}>
+            <SidebarSection title={`Related to ${channel.category}`} icon="category">
                 <div className="flex flex-col gap-3">
-                  {relatedChannels.slice(0, 5).map((ch) => (
+                  {relatedChannels.slice(0, 8).map((ch) => (
                     <ChannelCard
                       key={ch.id}
                       channel={ch}
@@ -219,55 +210,40 @@ export default function ChannelPlayerView({ channel, relatedChannels, allChannel
                     />
                   ))}
                 </div>
-              </div>
-            )}
+            </SidebarSection>
 
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 px-2">
-                <span className="material-icons text-amber-400 text-sm">local_fire_department</span>
-                <h3 className="text-xs font-black text-white uppercase tracking-widest">
-                  Most Viewed Channels
-                </h3>
-              </div>
-              <div className="flex flex-col gap-3">
-                {popularChannels.slice(0, 5).map((ch) => (
-                  <ChannelCard
-                    key={`popular-${ch.id}`}
-                    channel={ch}
-                    mode="list"
-                    active={false}
-                    favorite={isFavorite(ch.id)}
-                    onSelect={selectChannel}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 px-2">
-                <span className="material-icons text-indigo-400 text-sm">auto_awesome</span>
-                <h3 className="text-xs font-black text-white uppercase tracking-widest">
-                  Recommendations for you
-                </h3>
-              </div>
-              <div className="flex flex-col gap-3">
-                {popularChannels.slice(5, 10).map((ch) => (
-                  <ChannelCard
-                    key={`recommended-${ch.id}`}
-                    channel={ch}
-                    mode="list"
-                    active={false}
-                    favorite={isFavorite(ch.id)}
-                    onSelect={selectChannel}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                ))}
-              </div>
-            </div>
+            <SidebarSection title="Trending Now" icon="local_fire_department">
+                <div className="flex flex-col gap-3">
+                  {popularChannels.slice(0, 8).map((ch) => (
+                    <ChannelCard
+                      key={`pop-${ch.id}`}
+                      channel={ch}
+                      mode="list"
+                      active={false}
+                      favorite={isFavorite(ch.id)}
+                      onSelect={selectChannel}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  ))}
+                </div>
+            </SidebarSection>
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+function SidebarSection({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+   return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2 px-2">
+          <span className="material-icons text-accent text-sm">{icon}</span>
+          <h3 className="text-xs font-black text-white uppercase tracking-widest">
+            {title}
+          </h3>
+        </div>
+        {children}
+      </div>
+   );
 }

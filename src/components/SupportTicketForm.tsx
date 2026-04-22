@@ -115,7 +115,11 @@ export default function SupportTicketForm({ initialType = 'SUPPORT' }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 animate-fade-in transform-gpu">
+    <div className="glass rounded-[32px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-8 opacity-10">
+        <span className="material-icons text-7xl text-accent">confirmation_number</span>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 animate-fade-in transform-gpu relative z-10">
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="block text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">

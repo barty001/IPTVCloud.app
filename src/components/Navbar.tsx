@@ -127,9 +127,7 @@ export default function Navbar() {
       )}
       <header
         className={`fixed left-0 right-0 z-50 transition-all duration-500 transform-gpu ${!isOnline && mounted ? 'top-[28px]' : 'top-0'} ${
-          scrolled
-            ? 'bg-background/80 backdrop-blur-xl border-b border-border shadow-xl shadow-black/20'
-            : 'bg-transparent'
+          scrolled ? 'glass h-14' : 'h-16 bg-transparent border-transparent'
         }`}
       >
         <div className="mx-auto max-w-[1460px] px-4 sm:px-6">

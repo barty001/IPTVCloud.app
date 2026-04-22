@@ -4,8 +4,11 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import Hls from 'hls.js';
 import { usePlayerShortcuts } from '@/hooks/use-player-shortcuts';
 import { buildStreamProxyUrl } from '@/services/stream-service';
+import { usePlayerStore } from '@/store/player-store';
 import { encodeBase64Url } from '@/lib/base64';
 import type { Channel } from '@/types';
+import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
 
 type Props = {
   channel?: Channel | null;
@@ -49,6 +52,7 @@ export default function Player({
   onPreviousChannel,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,8 +62,9 @@ export default function Player({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [status, setStatus] = useState<PlayerStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [theaterMode, setTheaterMode] = useState(false);
   const [showControls, setShowControls] = useState(true);
+
+  const { theaterMode, setTheaterMode, ambientMode, setAmbientMode } = usePlayerStore();
 
   // Unified Settings Menu
   const [showSettings, setShowSettings] = useState(false);
@@ -69,7 +74,6 @@ export default function Player({
 
   const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState({ bitrate: 0, res: '0x0', buffer: 0, dropped: 0 });
-  const [showEmbed, setShowEmbed] = useState(false);
 
   // Quality
   const [qualities, setQualities] = useState<QualityLevel[]>([]);
@@ -208,7 +212,7 @@ export default function Player({
           abrBandWidthUpFactor: 0.6,
           maxBufferLength: 10,
           maxMaxBufferLength: 20,
-          maxBufferSize: 15 * 1000 * 1000, // 15MB buffer max for low connections
+          maxBufferSize: 15 * 1000 * 1000,
           maxBufferHole: 0.5,
           startLevel: -1,
           autoStartLoad: true,
@@ -287,7 +291,7 @@ export default function Player({
       setStatus('idle');
       return;
     }
-    loadStream(activeKey!, activeOriginalUrl!);
+    void loadStream(activeKey!, activeOriginalUrl!);
     return () => {
       clearLoadTimeout();
       destroyHls();
@@ -339,9 +343,9 @@ export default function Player({
         const livePosition = hlsRef.current?.liveSyncPosition;
         if (livePosition) {
           const diff = Math.abs(livePosition - video.currentTime);
-          setIsLiveSynced(diff < 5); // Within 5 seconds is considered "live"
+          setIsLiveSynced(diff < 5);
         } else {
-          setIsLiveSynced(true); // Fallback for non-HLS live
+          setIsLiveSynced(true);
         }
       } else {
         setIsLiveSynced(false);
@@ -438,14 +442,11 @@ export default function Player({
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds === Infinity) return '0:00';
-
     const isNegative = seconds < 0;
     if (isNegative) seconds = -seconds;
-
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     const formatted = `${m}:${s < 10 ? '0' : ''}${s}`;
-
     return isNegative ? `-${formatted}` : formatted;
   };
 
@@ -474,7 +475,7 @@ export default function Player({
     onNextChannel,
     onPreviousChannel,
     onTogglePictureInPicture: () => void togglePiP(),
-    onToggleTheater: () => setTheaterMode((v) => !v),
+    onToggleTheater: () => setTheaterMode(!theaterMode),
   });
 
   const displayTitle = channel?.name || title;
@@ -500,38 +501,131 @@ export default function Player({
       onMouseLeave={() => {
         if (!showSettings) setShowControls(false);
       }}
-      onClick={(e) => {
-        // Handle mobile tap to show/hide controls
-        if (window.innerWidth < 1024) {
-          const target = e.target as HTMLElement;
-          // Don't toggle if clicking on a control button
-          if (!target.closest('button') && !target.closest('input')) {
-            setShowControls(!showControls);
-            if (!showControls) resetControlsTimer();
-          }
-        }
-      }}
-      onDoubleClick={() => void toggleFullscreen()}
-      className={`group relative overflow-hidden bg-black transition-all duration-500 transform-gpu 
+      className={`group relative overflow-hidden bg-black transition-all duration-500 transform-gpu glass
         ${!showControls && status === 'playing' ? 'cursor-none' : 'cursor-default'}
-        ${isFullscreen ? 'fixed inset-0 z-[9999] h-screen w-screen !border-none !rounded-none !p-0 !m-0' : theaterMode ? 'rounded-none h-[60vh] sm:h-[70vh]' : 'rounded-[24px] sm:rounded-[40px] border border-white/[0.08] shadow-2xl shadow-black/50 h-[240px] sm:h-[500px] lg:h-[640px]'} 
+        ${isFullscreen ? 'fixed inset-0 z-[9999] h-screen w-screen !border-none !rounded-none !p-0 !m-0' : theaterMode ? 'rounded-none h-[60vh] sm:h-[80vh]' : 'rounded-[24px] sm:rounded-[40px] border border-white/[0.08] shadow-2xl h-[240px] sm:h-[500px] lg:h-[640px]'} 
         ${className || ''}`}
     >
+      {/* Ambient Mode Backdrop */}
+      {ambientMode && status === 'playing' && (
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden opacity-40">
+           <video
+             src={videoRef.current?.src}
+             className="h-full w-full object-cover blur-[120px] scale-150"
+             muted
+             autoPlay
+             loop
+             playsInline
+           />
+        </div>
+      )}
+
       <video
         ref={videoRef}
-        className="h-full w-full object-contain bg-black"
+        className="h-full w-full object-contain bg-transparent relative z-10"
         poster={poster}
         playsInline
       />
+      
+      {/* Settings Menu Overlay */}
+      {showSettings && (
+        <div className="absolute bottom-20 right-4 sm:right-8 w-64 glass rounded-[24px] z-50 p-2 animate-fade-in shadow-2xl shadow-black/80 settings-menu-container">
+          {settingsMenuLevel === 'main' && (
+            <div className="space-y-1">
+              <div className="px-4 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 mb-1">
+                Player Control
+              </div>
+              <SettingsButton
+                icon="high_quality"
+                label="Quality"
+                value={currentQualityName}
+                onClick={() => setSettingsMenuLevel('quality')}
+              />
+              <SettingsButton
+                icon="closed_caption"
+                label="Subtitles"
+                value={currentSubtitleName}
+                onClick={() => setSettingsMenuLevel('captions')}
+              />
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all text-slate-200">
+                <div className="flex items-center gap-3">
+                   <span className="material-icons text-[18px] opacity-70">blur_on</span>
+                   <span className="text-xs font-semibold">Ambient Mode</span>
+                </div>
+                <button 
+                  onClick={() => setAmbientMode(!ambientMode)}
+                  className={`h-5 w-10 rounded-full transition-all relative ${ambientMode ? 'bg-accent' : 'bg-slate-700'}`}
+                >
+                   <div className={`absolute top-1 h-3 w-3 rounded-full bg-white transition-all ${ambientMode ? 'right-1' : 'left-1'}`} />
+                </button>
+              </div>
+              <SettingsButton
+                icon="info"
+                label="Stats for Nerds"
+                value={showStats ? 'On' : 'Off'}
+                onClick={() => setShowStats(!showStats)}
+              />
+            </div>
+          )}
+
+          {settingsMenuLevel === 'quality' && (
+            <div className="space-y-1">
+              <button
+                onClick={() => setSettingsMenuLevel('main')}
+                className="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white transition-all border-b border-white/5 mb-1"
+              >
+                <span className="material-icons text-sm">west</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Back to settings</span>
+              </button>
+              <SettingsOption
+                active={currentQualityId === -1}
+                label="Auto"
+                onClick={() => changeQuality(-1)}
+              />
+              {qualities.map((q) => (
+                <SettingsOption
+                  key={q.id}
+                  active={currentQualityId === q.id}
+                  label={q.name}
+                  onClick={() => changeQuality(q.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {settingsMenuLevel === 'captions' && (
+            <div className="space-y-1">
+              <button
+                onClick={() => setSettingsMenuLevel('main')}
+                className="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white transition-all border-b border-white/5 mb-1"
+              >
+                <span className="material-icons text-sm">west</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Back to settings</span>
+              </button>
+              <SettingsOption
+                active={currentSubtitleId === -1}
+                label="Off"
+                onClick={() => changeSubtitle(-1)}
+              />
+              {subtitles.map((s) => (
+                <SettingsOption
+                  key={s.id}
+                  active={currentSubtitleId === s.id}
+                  label={s.name}
+                  onClick={() => changeSubtitle(s.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main UI Overlay */}
       <div
         className="absolute inset-0 z-20"
         onClick={(e) => {
-          // Handle mobile tap to show/hide controls
           if (window.innerWidth < 1024) {
             const target = e.target as HTMLElement;
-            // Don't toggle if clicking on a control button or settings menu
             if (
               !target.closest('button') &&
               !target.closest('input') &&
@@ -578,6 +672,16 @@ export default function Player({
             </div>
           </div>
         </div>
+
+        {/* Stats for Nerds */}
+        {showStats && (
+           <div className="absolute top-20 left-4 sm:left-8 p-4 glass rounded-2xl z-40 text-[9px] font-mono text-cyan-400 space-y-1">
+              <div>Resolution: {stats.res}</div>
+              <div>Bitrate: {stats.bitrate} kbps</div>
+              <div>Buffer: {stats.buffer}s</div>
+              <div>Dropped: {stats.dropped}</div>
+           </div>
+        )}
 
         {/* Bottom Controls */}
         <div
@@ -628,7 +732,6 @@ export default function Player({
                   <span className="material-icons text-lg sm:text-2xl">skip_next</span>
                 </IconButton>
 
-                {/* Volume Hover Control */}
                 <div className="hidden sm:flex items-center group/volume hover:bg-white/10 rounded-full transition-all overflow-hidden h-11 ml-2">
                   <button
                     onClick={toggleMute}
@@ -658,7 +761,6 @@ export default function Player({
                   />
                 </div>
 
-                {/* Mobile Volume Toggle */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -673,23 +775,21 @@ export default function Player({
               </div>
 
               <div className="flex items-center gap-0.5 sm:gap-2">
-                <div className="settings-menu-container">
-                  <IconButton
-                    onClick={(e) => {
-                      e?.stopPropagation();
-                      setSettingsMenuLevel('main');
-                      setShowSettings(!showSettings);
-                    }}
-                    active={showSettings}
-                    className="h-8 w-8 sm:h-11 sm:w-11"
+                <IconButton
+                  onClick={(e) => {
+                    e?.stopPropagation();
+                    setSettingsMenuLevel('main');
+                    setShowSettings(!showSettings);
+                  }}
+                  active={showSettings}
+                  className="h-8 w-8 sm:h-11 sm:w-11 settings-menu-container"
+                >
+                  <span
+                    className={`material-icons text-base sm:text-xl transition-transform duration-500 ${showSettings ? 'rotate-90' : ''}`}
                   >
-                    <span
-                      className={`material-icons text-base sm:text-xl transition-transform duration-500 ${showSettings ? 'rotate-90' : ''}`}
-                    >
-                      settings
-                    </span>
-                  </IconButton>
-                </div>
+                    settings
+                  </span>
+                </IconButton>
 
                 <IconButton onClick={() => void togglePiP()} className="hidden sm:flex h-11 w-11">
                   <span className="material-icons text-xl">picture_in_picture_alt</span>
@@ -735,7 +835,7 @@ function IconButton({
         e.stopPropagation();
         onClick?.(e);
       }}
-      className={`h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${active ? 'bg-cyan-500 text-slate-950 shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'text-white hover:bg-white/10'} ${className}`}
+      className={`h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${active ? 'bg-accent text-slate-950 shadow-accent' : 'text-white hover:bg-white/10'} ${className}`}
     >
       {children}
     </button>
