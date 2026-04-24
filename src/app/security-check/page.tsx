@@ -9,12 +9,12 @@ interface ChallengeData {
   question: string;
   options?: string[];
   token: string;
+  rayId: string;
 }
 
 function SecurityCheckContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [rayId] = useState(() => Math.random().toString(36).substring(2, 10).toUpperCase());
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [status, setStatus] = useState('Checking your browser...');
   const [solution, setSolution] = useState<string>('');
@@ -281,7 +281,7 @@ function SecurityCheckContent() {
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">
                 Ray ID
               </span>
-              <span className="text-xs font-mono text-slate-500">{rayId}</span>
+              <span className="text-xs font-mono text-slate-500">{challenge?.rayId || '...'}</span>
             </div>
             <button
               disabled={loading}

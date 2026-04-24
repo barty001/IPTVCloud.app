@@ -14,7 +14,7 @@ function setSecurityHeaders(response: NextResponse): NextResponse {
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' data: https://*.githubusercontent.com https://i.imgur.com https://cdn.jsdelivr.net;
+    img-src 'self' data: https://*.githubusercontent.com https://i.imgur.com https://cdn.jsdelivr.net https://picsum.photos https://*.picsum.photos;
     font-src 'self' https://fonts.gstatic.com;
     connect-src 'self' https://*.google-analytics.com;
     frame-ancestors 'none';
