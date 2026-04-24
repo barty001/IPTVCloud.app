@@ -161,4 +161,3 @@ async function getEnabledChallengeTypes(): Promise<ChallengeType[]> {
   }
   return [...CHALLENGE_TYPES];
 }
-
