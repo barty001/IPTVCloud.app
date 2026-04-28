@@ -1,5 +1,7 @@
 # IPTVCloud.app — Live TV Reimagined
 
+> :warning: This repository is now archived and only reserved as historical purposes. The [IPTVCloud-app/IPTVCloud.app](https://github.com/IPTVCloud-app/IPTVCloud.app) is now new currently maintained repository.
+
 Production-ready IPTV web application built with **Next.js 14**, **PostgreSQL**, and **TailwindCSS**.
 
 ## 🚀 Features
