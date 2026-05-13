@@ -48,7 +48,7 @@ async function verifyTables() {
         [table],
       );
 
-      const exists = result.rows[0].exists;
+      const exists = (result.rows[0] as { exists: boolean }).exists;
 
       if (exists) {
         console.log(`✅ Table "${table}" exists.`);
@@ -84,7 +84,7 @@ async function verifyTables() {
           `,
           [table],
         );
-        const existingColumns = dbColumnsResult.rows.map((row) => row.column_name);
+        const existingColumns = dbColumnsResult.rows.map((row) => (row as { column_name: string }).column_name);
 
         for (const column of expectedColumns) {
           if (!existingColumns.includes(column)) {
