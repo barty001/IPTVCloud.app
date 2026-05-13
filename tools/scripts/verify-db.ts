@@ -27,9 +27,9 @@ async function verifyTables() {
       process.exit(0);
     }
 
-    const expectedTables = tableMatches
-      .map((m) => m.match(/"([^"]+)"/)?.[1])
-      .filter(Boolean) as string[];
+    const expectedTables = tableMatche
+      .map((m) => m.match(/\"([^\"]+)\"/)? .[1])
+      .filter((t): t is string => t !== undefined);
 
     console.log(`Checking ${expectedTables.length} tables...`);
 
