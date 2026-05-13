@@ -1,0 +1,143 @@
+name: EPG
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: epg
+
+      - name: Create EPG directory
+        run: mkdir -p epg
+
+      - name: Download IPTV Harmony EPG
+        run: |
+          curl -L "http://line.iptvharmony.co/xmltv.php?username=dfae59b084&password=f0a98cbf9616" \
+            -o epg/iptv-harmony.xml \
+            --max-time 300 \
+            --retry 3 \
+            || echo "Warning: Failed to download IPTV Harmony EPG"
+
+      - name: Download Open EPG
+        run: |
+          curl -L "https://www.open-epg.com/generate/QxzbxghSHB.xml.gz" \
+            -o epg/open-epg.xml.gz \
+            --max-time 300 \
+            --retry 3
+          gunzip -f epg/open-epg.xml.gz || echo "Warning: Failed to decompress Open EPG"
+
+      - name: Merge EPG files
+        run: |
+          if [ -f epg/iptv-harmony.xml ] && [ -f epg/open-epg.xml ]; then
+            echo "Merging EPG files..."
+            # Create merged EPG with both sources
+            echo '<?xml version="1.0" encoding="UTF-8"?>' > epg/merged.xml
+            echo '<!DOCTYPE tv SYSTEM "xmltv.dtd">' >> epg/merged.xml
+            echo '<tv>' >> epg/merged.xml
+            tail -n +2 epg/iptv-harmony.xml | head -n -1 >> epg/merged.xml
+            tail -n +2 epg/open-epg.xml | head -n -1 >> epg/merged.xml
+            echo '</tv>' >> epg/merged.xml
+            cp epg/merged.xml epg/guide.xml
+          elif [ -f epg/open-epg.xml ]; then
+            echo "Using Open EPG as primary source..."
+            cp epg/open-epg.xml epg/guide.xml
+          elif [ -f epg/iptv-harmony.xml ]; then
+            echo "Using IPTV Harmony EPG as primary source..."
+            cp epg/iptv-harmony.xml epg/guide.xml
+          else
+            echo "Error: No EPG files available"
+            exit 1
+          fi
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add epg/
+          git commit -m "chore: update EPG data from sources" || echo "No changes to commit"
+
+      - name: Push changes
+        run: git push origin epgname: EPG
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: epg
+
+      - name: Create EPG directory
+        run: mkdir -p epg
+
+      - name: Download IPTV Harmony EPG
+        run: |
+          curl -L "http://line.iptvharmony.co/xmltv.php?username=dfae59b084&password=f0a98cbf9616" \
+            -o epg/iptv-harmony.xml \
+            --max-time 300 \
+            --retry 3 \
+            || echo "Warning: Failed to download IPTV Harmony EPG"
+
+      - name: Download Open EPG
+        run: |
+          curl -L "https://www.open-epg.com/generate/QxzbxghSHB.xml.gz" \
+            -o epg/open-epg.xml.gz \
+            --max-time 300 \
+            --retry 3
+          gunzip -f epg/open-epg.xml.gz || echo "Warning: Failed to decompress Open EPG"
+
+      - name: Merge EPG files
+        run: |
+          if [ -f epg/iptv-harmony.xml ] && [ -f epg/open-epg.xml ]; then
+            echo "Merging EPG files..."
+            # Create merged EPG with both sources
+            echo '<?xml version="1.0" encoding="UTF-8"?>' > epg/merged.xml
+            echo '<!DOCTYPE tv SYSTEM "xmltv.dtd">' >> epg/merged.xml
+            echo '<tv>' >> epg/merged.xml
+            tail -n +2 epg/iptv-harmony.xml | head -n -1 >> epg/merged.xml
+            tail -n +2 epg/open-epg.xml | head -n -1 >> epg/merged.xml
+            echo '</tv>' >> epg/merged.xml
+            cp epg/merged.xml epg/guide.xml
+          elif [ -f epg/open-epg.xml ]; then
+            echo "Using Open EPG as primary source..."
+            cp epg/open-epg.xml epg/guide.xml
+          elif [ -f epg/iptv-harmony.xml ]; then
+            echo "Using IPTV Harmony EPG as primary source..."
+            cp epg/iptv-harmony.xml epg/guide.xml
+          else
+            echo "Error: No EPG files available"
+            exit 1
+          fi
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add epg/
+          git commit -m "chore: update EPG data from sources" || echo "No changes to commit"
+
+      - name: Push changes
+        run: git push origin epg
